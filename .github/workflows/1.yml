@@ -14,29 +14,29 @@ jobs:
     name: Check current step number
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
       - id: get_step
-        run: |
-          echo "current_step=$(cat ./.github/steps/-step.txt)" >> $GITHUB_OUTPUT
+        run: echo "current_step=$(cat .github/steps/step.txt)" >> $GITHUB_ENV
       - name: Debug current step
-        run: echo "Current step is ${{ steps.get_step.outputs.current_step }}"
+        run: echo "Current step is ${{ env.current_step }}"
     outputs:
-      current_step: ${{ steps.get_step.outputs.current_step }}
+      current_step: ${{ env.current_step }}
 
-  on_issue_opened:
-    name: On issue opened
+  move_to_next_step:
+    name: Move to Next Step
     needs: get_current_step
     if: >-
-      ${{ !github.event.repository.is_template
-          && needs.get_current_step.outputs.current_step == 1 }}
+      github.event_name == 'issues' &&
+      github.event.action == 'opened' &&
+      needs.get_current_step.outputs.current_step == '1'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: update-game
+
       - name: Update to step 2.1
         uses: skills/action-update-step@v2
         with:
